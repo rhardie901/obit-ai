@@ -1,0 +1,1187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Obit AI — Memorial Content Generator</title>
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --cream: #F7F4EF;
+    --warm-white: #FDFCFA;
+    --text-dark: #1C1917;
+    --text-mid: #57534E;
+    --text-light: #A8A29E;
+    --border: #E7E2DA;
+    --border-focus: #9C8B7A;
+    --accent: #6B4F3A;
+    --accent-light: #F0E8E0;
+    --danger: #9B2828;
+    --success: #2A6B4F;
+  }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--cream);
+    color: var(--text-dark);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 48px 16px 80px;
+  }
+
+  .brand {
+    text-align: center;
+    margin-bottom: 48px;
+  }
+  .brand h1 {
+    font-family: 'Lora', serif;
+    font-size: 28px;
+    font-weight: 400;
+    letter-spacing: -0.3px;
+    color: var(--text-dark);
+  }
+  .brand p {
+    font-size: 14px;
+    color: var(--text-light);
+    margin-top: 6px;
+    font-weight: 300;
+  }
+
+  .card {
+    background: var(--warm-white);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 40px 48px;
+    width: 100%;
+    max-width: 660px;
+  }
+
+  .progress-bar {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 36px;
+  }
+  .progress-bar span {
+    flex: 1;
+    height: 3px;
+    background: var(--border);
+    border-radius: 2px;
+    transition: background 0.3s ease;
+  }
+  .progress-bar span.done { background: var(--accent); }
+  .progress-bar span.active { background: var(--accent); opacity: 0.5; }
+
+  .step { display: none; }
+  .step.active { display: block; }
+
+  .step-label {
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-light);
+    margin-bottom: 8px;
+    font-weight: 500;
+  }
+  .step-title {
+    font-family: 'Lora', serif;
+    font-size: 22px;
+    font-weight: 400;
+    margin-bottom: 28px;
+    color: var(--text-dark);
+    line-height: 1.35;
+  }
+
+  .field-group { margin-bottom: 20px; }
+  .field-group label {
+    display: block;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-mid);
+    margin-bottom: 6px;
+  }
+  .field-group label .req {
+    color: var(--accent);
+    margin-left: 2px;
+  }
+  .field-group label .hint {
+    font-weight: 300;
+    color: var(--text-light);
+    font-size: 12px;
+    margin-left: 6px;
+  }
+  .field-group input,
+  .field-group textarea,
+  .field-group select {
+    width: 100%;
+    padding: 11px 14px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    color: var(--text-dark);
+    background: var(--warm-white);
+    transition: border-color 0.2s;
+    outline: none;
+    appearance: none;
+  }
+  .field-group input:focus,
+  .field-group textarea:focus {
+    border-color: var(--border-focus);
+  }
+  .field-group textarea {
+    resize: vertical;
+    min-height: 100px;
+    line-height: 1.6;
+  }
+
+  .photo-upload {
+    border: 1.5px dashed var(--border);
+    border-radius: 10px;
+    padding: 20px;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+    background: var(--cream);
+  }
+  .photo-upload:hover {
+    border-color: var(--border-focus);
+    background: var(--accent-light);
+  }
+  .photo-upload-empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    color: var(--text-mid);
+    font-size: 13px;
+  }
+  .photo-upload-icon {
+    font-size: 18px;
+    color: var(--text-light);
+    line-height: 1;
+  }
+  .photo-preview {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .photo-preview img {
+    width: 64px;
+    height: 64px;
+    border-radius: 8px;
+    object-fit: cover;
+    border: 1px solid var(--border);
+  }
+  .photo-remove {
+    font-size: 12px;
+    color: var(--text-mid);
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 5px 12px;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    transition: background 0.15s;
+  }
+  .photo-remove:hover { background: var(--cream); }
+  .field-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+
+  .tone-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-top: 4px;
+  }
+  .tone-option {
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+    position: relative;
+  }
+  .tone-option:hover { border-color: var(--border-focus); }
+  .tone-option input { position: absolute; opacity: 0; pointer-events: none; }
+  .tone-option.selected {
+    border-color: var(--accent);
+    background: var(--accent-light);
+  }
+  .tone-option strong {
+    display: block;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-dark);
+    margin-bottom: 4px;
+  }
+  .tone-option p {
+    font-size: 12px;
+    color: var(--text-mid);
+    line-height: 1.5;
+    font-weight: 300;
+  }
+
+  .nav-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 32px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border);
+  }
+  .btn {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    border: none;
+    border-radius: 8px;
+    padding: 11px 24px;
+    cursor: pointer;
+    transition: background 0.2s, opacity 0.2s;
+  }
+  .btn-ghost {
+    background: none;
+    color: var(--text-light);
+    padding-left: 0;
+  }
+  .btn-ghost:hover { color: var(--text-mid); }
+  .btn-primary {
+    background: var(--accent);
+    color: white;
+  }
+  .btn-primary:hover { background: #5a4030; }
+  .btn-generate {
+    background: var(--text-dark);
+    color: white;
+    padding: 13px 32px;
+    font-size: 15px;
+  }
+  .btn-generate:hover { background: #333; }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .error-note {
+    font-size: 12px;
+    color: var(--danger);
+    margin-top: 12px;
+    display: none;
+  }
+
+  /* Results */
+  #results-card { display: none; }
+  #results-card.active { display: block; }
+
+  .results-header {
+    margin-bottom: 32px;
+  }
+  .results-header h2 {
+    font-family: 'Lora', serif;
+    font-size: 24px;
+    font-weight: 400;
+    margin-bottom: 8px;
+  }
+  .results-header p {
+    font-size: 13px;
+    color: var(--text-mid);
+    line-height: 1.6;
+  }
+
+  .result-section {
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    margin-bottom: 20px;
+    overflow: hidden;
+    transition: border-color 0.2s;
+  }
+  .result-section:focus-within {
+    border-color: var(--border-focus);
+  }
+
+  .result-header {
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #faf9f7;
+  }
+  .result-header-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .result-title {
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-mid);
+    font-weight: 600;
+  }
+  .word-target {
+    font-size: 11px;
+    color: var(--text-light);
+    background: var(--cream);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 2px 10px;
+    font-weight: 400;
+  }
+  .result-meta {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .word-count-live {
+    font-size: 11px;
+    color: var(--text-light);
+  }
+  .word-count-live.over { color: #9B6428; }
+  .word-count-live.under { color: var(--text-light); }
+
+  .result-body {
+    padding: 24px 28px;
+  }
+  .result-body [contenteditable] {
+    font-family: 'Lora', serif;
+    font-size: 16px;
+    line-height: 1.85;
+    color: var(--text-dark);
+    outline: none;
+    min-height: 80px;
+    caret-color: var(--accent);
+  }
+  .result-body [contenteditable] p { margin-bottom: 1em; }
+  .result-body [contenteditable] p:last-child { margin-bottom: 0; }
+
+  .result-footer {
+    padding: 10px 20px 12px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .edit-hint {
+    font-size: 11px;
+    color: var(--text-light);
+    font-style: italic;
+  }
+
+  /* Loading state */
+  .loading-state {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 28px 28px;
+    font-size: 13px;
+    color: var(--text-light);
+    font-style: italic;
+  }
+  .loading-dots span {
+    display: inline-block;
+    width: 5px;
+    height: 5px;
+    background: var(--text-light);
+    border-radius: 50%;
+    margin: 0 2px;
+    animation: pulse 1.2s ease-in-out infinite;
+  }
+  .loading-dots span:nth-child(2) { animation-delay: 0.2s; }
+  .loading-dots span:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes pulse {
+    0%, 80%, 100% { opacity: 0.2; transform: scale(0.8); }
+    40% { opacity: 1; transform: scale(1); }
+  }
+
+  .generation-status {
+    text-align: center;
+    padding: 12px 0 24px;
+    font-size: 13px;
+    color: var(--text-light);
+    display: none;
+  }
+  .generation-status.active { display: block; }
+  .generation-step {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin: 0 12px;
+    opacity: 0.35;
+    transition: opacity 0.3s;
+  }
+  .generation-step.current { opacity: 1; color: var(--accent); }
+  .generation-step.done { opacity: 0.7; }
+  .generation-step.done::before { content: '✓ '; font-size: 11px; }
+
+  .export-bar {
+    margin-top: 28px;
+    padding: 20px 24px;
+    background: #f4f1ec;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+  }
+  .export-bar-copy strong {
+    display: block;
+    font-size: 15px;
+    font-weight: 500;
+    margin-bottom: 2px;
+  }
+  .export-bar-copy span {
+    font-size: 12px;
+    color: var(--text-mid);
+  }
+  .export-actions { display: flex; gap: 10px; flex-shrink: 0; }
+  .btn-outline {
+    background: white;
+    border: 1px solid var(--border);
+    color: var(--text-mid);
+    border-radius: 8px;
+    padding: 10px 18px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .btn-outline:hover { background: var(--cream); }
+  .btn-export {
+    background: #3B2F63;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 22px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .btn-export:hover { background: #2e2450; }
+
+  .privacy-note {
+    text-align: center;
+    font-size: 11px;
+    color: var(--text-light);
+    margin-top: 20px;
+    line-height: 1.6;
+  }
+
+  .test-btn {
+    display: block;
+    text-align: right;
+    margin-bottom: 12px;
+    font-size: 11px;
+    color: var(--text-light);
+    cursor: pointer;
+    background: none;
+    border: none;
+    font-family: inherit;
+    text-decoration: underline;
+    padding: 0;
+  }
+  .test-btn:hover { color: var(--text-mid); }
+
+  @media (max-width: 560px) {
+    .card { padding: 28px 24px; }
+    .field-row { grid-template-columns: 1fr; }
+    .tone-grid { grid-template-columns: 1fr; }
+    .export-bar { flex-direction: column; align-items: flex-start; }
+  }
+</style>
+</head>
+<body>
+
+<div class="brand">
+  <h1>Obit AI</h1>
+  <p>Obituary, eulogy, and memorial program — in minutes</p>
+</div>
+
+<!-- INTAKE FORM -->
+<div class="card" id="form-card">
+  <div class="progress-bar" id="progress-bar">
+    <span></span><span></span><span></span><span></span><span></span>
+  </div>
+  <button class="test-btn" onclick="fillTestData()">Fill with test data</button>
+
+  <!-- Step 1: About the person -->
+  <div class="step active" data-step="1">
+    <p class="step-label">Step 1 of 5</p>
+    <h2 class="step-title">Tell us about the person</h2>
+    <div class="field-row">
+      <div class="field-group">
+        <label>Full name <span class="req">*</span></label>
+        <input type="text" id="full-name" placeholder="Margaret Louise Hendry">
+      </div>
+      <div class="field-group">
+        <label>Preferred name <span class="hint">optional</span></label>
+        <input type="text" id="nickname" placeholder="Maggie">
+      </div>
+    </div>
+    <div class="field-row">
+      <div class="field-group">
+        <label>Date of passing <span class="req">*</span></label>
+        <input type="text" id="date-passing" placeholder="November 14, 2024">
+      </div>
+      <div class="field-group">
+        <label>Age at passing <span class="hint">optional</span></label>
+        <input type="text" id="age" placeholder="78">
+      </div>
+    </div>
+    <div class="field-row">
+      <div class="field-group">
+        <label>City / state where they lived <span class="req">*</span></label>
+        <input type="text" id="city-lived" placeholder="Asheville, NC">
+      </div>
+      <div class="field-group">
+        <label>Date of birth <span class="hint">optional</span></label>
+        <input type="text" id="date-birth" placeholder="March 3, 1946">
+      </div>
+    </div>
+    <div class="field-row">
+      <div class="field-group">
+        <label>City / state of birth <span class="hint">optional</span></label>
+        <input type="text" id="city-birth" placeholder="Charleston, SC">
+      </div>
+      <div class="field-group">
+        <label>Parents' names <span class="hint">optional</span></label>
+        <input type="text" id="parents" placeholder="Harold and Edna Whitmore">
+      </div>
+    </div>
+    <div class="field-group">
+      <label>Photo for the cover page <span class="hint">optional · jpg or png, under 5MB</span></label>
+      <div class="photo-upload" id="photo-upload-zone" onclick="document.getElementById('photo-input').click()">
+        <div class="photo-upload-empty" id="photo-upload-empty">
+          <span class="photo-upload-icon">+</span>
+          <span>Click to upload a photo</span>
+        </div>
+        <div class="photo-preview" id="photo-preview" style="display:none">
+          <img id="photo-preview-img" alt="Selected photo">
+          <button type="button" class="photo-remove" onclick="event.stopPropagation(); removePhoto()">Remove</button>
+        </div>
+      </div>
+      <input type="file" id="photo-input" accept="image/jpeg,image/png" style="display:none" onchange="handlePhotoSelect(event)">
+      <p class="error-note" id="photo-error" style="margin-top:8px"></p>
+    </div>
+    <p class="error-note" id="error-1">Please fill in the required fields before continuing.</p>
+  </div>
+
+  <!-- Step 2: Life and work -->
+  <div class="step" data-step="2">
+    <p class="step-label">Step 2 of 5</p>
+    <h2 class="step-title">Their life and work</h2>
+    <div class="field-group">
+      <label>Occupation or career <span class="hint">optional</span></label>
+      <input type="text" id="career" placeholder="School librarian, Buncombe County Elementary">
+    </div>
+    <div class="field-group">
+      <label>Military service <span class="hint">optional</span></label>
+      <input type="text" id="military" placeholder="Army, 1965–1968">
+    </div>
+    <div class="field-group">
+      <label>Education <span class="hint">optional, if notable</span></label>
+      <input type="text" id="education" placeholder="University of South Carolina, 1968">
+    </div>
+    <div class="field-group">
+      <label>Faith / religion <span class="hint">optional</span></label>
+      <input type="text" id="faith" placeholder="Presbyterian">
+    </div>
+    <div class="field-group">
+      <label>Personality <span class="hint">up to 5 words or phrases</span></label>
+      <input type="text" id="personality" placeholder="Warm, patient, loved to read aloud, always made time">
+    </div>
+  </div>
+
+  <!-- Step 3: Family -->
+  <div class="step" data-step="3">
+    <p class="step-label">Step 3 of 5</p>
+    <h2 class="step-title">Family and relationships</h2>
+    <div class="field-row">
+      <div class="field-group">
+        <label>Spouse / partner <span class="hint">optional</span></label>
+        <input type="text" id="spouse" placeholder="James Hendry (51 years)">
+      </div>
+      <div class="field-group">
+        <label>Children <span class="hint">optional</span></label>
+        <input type="text" id="children" placeholder="David, Claire, Robert">
+      </div>
+    </div>
+    <div class="field-row">
+      <div class="field-group">
+        <label>Grandchildren <span class="hint">optional</span></label>
+        <input type="text" id="grandchildren" placeholder="7 grandchildren">
+      </div>
+      <div class="field-group">
+        <label>Siblings <span class="hint">optional</span></label>
+        <input type="text" id="siblings" placeholder="Ruth Whitmore-Bass">
+      </div>
+    </div>
+    <div class="field-group">
+      <label>Other survivors to mention <span class="hint">optional</span></label>
+      <input type="text" id="other-survivors" placeholder="Son-in-law Paul Ostrowski, daughter-in-law Anne Hendry">
+    </div>
+    <div class="field-group">
+      <label>Predeceased by <span class="hint">optional</span></label>
+      <input type="text" id="predeceased" placeholder="Her parents and brother George">
+    </div>
+  </div>
+
+  <!-- Step 4: Memories and service -->
+  <div class="step" data-step="4">
+    <p class="step-label">Step 4 of 5</p>
+    <h2 class="step-title">Memories and service details</h2>
+    <div class="field-group">
+      <label>Memories, stories, or things they loved <span class="hint">1–3, in your own words</span></label>
+      <textarea id="memories" placeholder="She read aloud with such feeling that children and teachers alike would linger in the doorway to listen. She remembered the names of everyone's pets. Every Thursday she volunteered at the library, even after she retired."></textarea>
+    </div>
+    <div class="field-group">
+      <label>Service details <span class="hint">date, time, location</span></label>
+      <input type="text" id="service-details" placeholder="Saturday November 23, 2:00 pm, First Presbyterian Church, Asheville">
+    </div>
+    <div class="field-row">
+      <div class="field-group">
+        <label>Visitation <span class="hint">optional</span></label>
+        <input type="text" id="visitation" placeholder="Friday 5–8 pm, same location">
+      </div>
+      <div class="field-group">
+        <label>Burial / cremation <span class="hint">optional</span></label>
+        <input type="text" id="burial" placeholder="Burial following the service">
+      </div>
+    </div>
+    <div class="field-group">
+      <label>In lieu of flowers <span class="hint">optional</span></label>
+      <input type="text" id="flowers" placeholder="Buncombe County Public Library Foundation">
+    </div>
+    <div class="field-group">
+      <label>Anything to avoid <span class="hint">optional</span></label>
+      <input type="text" id="avoid" placeholder="Please don't mention the illness or how she died">
+    </div>
+    <div class="field-group">
+      <label>Poem or reading to include <span class="hint">paste text if desired</span></label>
+      <textarea id="poem" style="min-height:70px" placeholder="Paste the full text of any poem or scripture reading here"></textarea>
+    </div>
+  </div>
+
+  <!-- Step 5: Tone -->
+  <div class="step" data-step="5">
+    <p class="step-label">Step 5 of 5</p>
+    <h2 class="step-title">Choose the tone</h2>
+    <div class="tone-grid">
+      <label class="tone-option" id="tone-celebratory" onclick="selectTone('celebratory')">
+        <input type="radio" name="tone" value="celebratory">
+        <strong>A life fully lived</strong>
+        <p>Write from gratitude. Honor what was built, loved, and given.</p>
+      </label>
+      <label class="tone-option" id="tone-sudden" onclick="selectTone('sudden')">
+        <input type="radio" name="tone" value="sudden">
+        <strong>A loss that came too soon</strong>
+        <p>Tender and honest. Doesn't force resolution or paper over grief.</p>
+      </label>
+      <label class="tone-option" id="tone-religious" onclick="selectTone('religious')">
+        <input type="radio" name="tone" value="religious">
+        <strong>A faith-centered service</strong>
+        <p>Faith is central. Grounded in the specific tradition provided.</p>
+      </label>
+      <label class="tone-option selected" id="tone-none" onclick="selectTone('none')">
+        <input type="radio" name="tone" value="none" checked>
+        <strong>No preference</strong>
+        <p>Let the details from the intake guide the tone.</p>
+      </label>
+    </div>
+  </div>
+
+  <div class="nav-row">
+    <button class="btn btn-ghost" id="back-btn" onclick="prevStep()" style="visibility:hidden">← Back</button>
+    <button class="btn btn-primary" id="next-btn" onclick="nextStep()">Continue</button>
+  </div>
+  <p class="error-note" id="error-note"></p>
+</div>
+
+<!-- RESULTS -->
+<div class="card" id="results-card">
+  <div class="results-header">
+    <h2>Review your memorial content</h2>
+    <p>Each section is fully editable. When the text is right, export for $19.</p>
+  </div>
+
+  <!-- Generation progress indicator -->
+  <div class="generation-status" id="gen-status">
+    <span class="generation-step" id="gstep-program">Memorial program</span>
+    <span class="generation-step" id="gstep-obituary">Obituary</span>
+    <span class="generation-step" id="gstep-eulogy">Eulogy</span>
+  </div>
+
+  <!-- Memorial Program -->
+  <div class="result-section">
+    <div class="result-header">
+      <div class="result-header-left">
+        <span class="result-title">Memorial Program</span>
+        <span class="word-target">100–150 words</span>
+      </div>
+      <div class="result-meta">
+        <span class="word-count-live" id="wc-program">—</span>
+      </div>
+    </div>
+    <div class="result-body">
+      <div contenteditable="true" id="result-program"
+        data-placeholder="Generating your memorial program copy..."
+        oninput="updateWordCount('program', 100, 150)"
+        onfocus="setActiveSection('Memorial Program')">
+        <div class="loading-state">
+          <div class="loading-dots"><span></span><span></span><span></span></div>
+          Generating memorial program...
+        </div>
+      </div>
+    </div>
+    <div class="result-footer">
+      <span class="edit-hint">Click anywhere in the text to make changes</span>
+    </div>
+  </div>
+
+  <!-- Obituary -->
+  <div class="result-section">
+    <div class="result-header">
+      <div class="result-header-left">
+        <span class="result-title">Obituary</span>
+        <span class="word-target">300–400 words</span>
+      </div>
+      <div class="result-meta">
+        <span class="word-count-live" id="wc-obituary">—</span>
+      </div>
+    </div>
+    <div class="result-body">
+      <div contenteditable="true" id="result-obituary"
+        data-placeholder="Generating your obituary..."
+        oninput="updateWordCount('obituary', 300, 400)"
+        onfocus="setActiveSection('Obituary')">
+        <div class="loading-state">
+          <div class="loading-dots"><span></span><span></span><span></span></div>
+          Waiting...
+        </div>
+      </div>
+    </div>
+    <div class="result-footer">
+      <span class="edit-hint">Click anywhere in the text to make changes</span>
+    </div>
+  </div>
+
+  <!-- Eulogy -->
+  <div class="result-section">
+    <div class="result-header">
+      <div class="result-header-left">
+        <span class="result-title">Eulogy</span>
+        <span class="word-target">600–800 words · approx. 5–6 min spoken</span>
+      </div>
+      <div class="result-meta">
+        <span class="word-count-live" id="wc-eulogy">—</span>
+      </div>
+    </div>
+    <div class="result-body">
+      <div contenteditable="true" id="result-eulogy"
+        data-placeholder="Generating your eulogy..."
+        oninput="updateWordCount('eulogy', 600, 800)"
+        onfocus="setActiveSection('Eulogy')">
+        <div class="loading-state">
+          <div class="loading-dots"><span></span><span></span><span></span></div>
+          Waiting...
+        </div>
+      </div>
+    </div>
+    <div class="result-footer">
+      <span class="edit-hint">Click anywhere in the text to make changes</span>
+    </div>
+  </div>
+
+  <!-- Export bar -->
+  <div class="export-bar">
+    <div class="export-bar-copy">
+      <strong>Ready to export?</strong>
+      <span id="export-status-text">Download as a formatted Word document or PDF.</span>
+    </div>
+    <div class="export-actions">
+      <button class="btn-outline" onclick="location.reload()">↺ Start over</button>
+      <select id="export-format" class="btn-outline" style="cursor:pointer">
+        <option value="pdf">PDF</option>
+        <option value="docx">Word (.docx)</option>
+      </select>
+      <button class="btn-export" id="export-btn" onclick="startExport()">Export &amp; Download — $19</button>
+    </div>
+  </div>
+
+  <p class="privacy-note">
+    Your details are used only to generate these documents and are not stored.<br>
+    Content is processed via our server and the Anthropic API, subject to their <a href="https://www.anthropic.com/privacy" style="color:var(--text-light)">data policy</a>.
+  </p>
+</div>
+
+<script>
+let currentStep = 1;
+const totalSteps = 5;
+let selectedTone = 'none';
+let photoBase64 = null;
+
+function handlePhotoSelect(event) {
+  const file = event.target.files[0];
+  const errorEl = document.getElementById('photo-error');
+  errorEl.style.display = 'none';
+  errorEl.textContent = '';
+
+  if (!file) return;
+
+  const validTypes = ['image/jpeg', 'image/png'];
+  if (!validTypes.includes(file.type)) {
+    errorEl.textContent = 'Please choose a JPG or PNG image.';
+    errorEl.style.display = 'block';
+    event.target.value = '';
+    return;
+  }
+
+  const maxBytes = 5 * 1024 * 1024;
+  if (file.size > maxBytes) {
+    errorEl.textContent = 'That photo is over 5MB. Please choose a smaller file.';
+    errorEl.style.display = 'block';
+    event.target.value = '';
+    return;
+  }
+
+  const reader = new FileReader();
+  reader.onload = () => {
+    photoBase64 = reader.result;
+    document.getElementById('photo-preview-img').src = photoBase64;
+    document.getElementById('photo-upload-empty').style.display = 'none';
+    document.getElementById('photo-preview').style.display = 'flex';
+  };
+  reader.onerror = () => {
+    errorEl.textContent = 'Could not read that file. Please try again.';
+    errorEl.style.display = 'block';
+  };
+  reader.readAsDataURL(file);
+}
+
+function removePhoto() {
+  photoBase64 = null;
+  document.getElementById('photo-input').value = '';
+  document.getElementById('photo-upload-empty').style.display = 'flex';
+  document.getElementById('photo-preview').style.display = 'none';
+}
+
+function selectTone(val) {
+  selectedTone = val;
+  document.querySelectorAll('.tone-option').forEach(el => el.classList.remove('selected'));
+  document.getElementById('tone-' + val).classList.add('selected');
+}
+
+function updateProgress() {
+  const bars = document.querySelectorAll('.progress-bar span');
+  bars.forEach((b, i) => {
+    b.className = '';
+    if (i < currentStep - 1) b.classList.add('done');
+    else if (i === currentStep - 1) b.classList.add('active');
+  });
+  document.getElementById('back-btn').style.visibility = currentStep > 1 ? 'visible' : 'hidden';
+  const nextBtn = document.getElementById('next-btn');
+  if (currentStep === totalSteps) {
+    nextBtn.textContent = 'Generate content';
+    nextBtn.className = 'btn btn-generate';
+  } else {
+    nextBtn.textContent = 'Continue';
+    nextBtn.className = 'btn btn-primary';
+  }
+}
+
+function validate(step) {
+  if (step === 1) {
+    return document.getElementById('full-name').value.trim() &&
+           document.getElementById('date-passing').value.trim() &&
+           document.getElementById('city-lived').value.trim();
+  }
+  return true;
+}
+
+function nextStep() {
+  document.getElementById('error-note').style.display = 'none';
+  if (!validate(currentStep)) {
+    const err = document.getElementById('error-note');
+    err.textContent = 'Please fill in the required fields before continuing.';
+    err.style.display = 'block';
+    return;
+  }
+  if (currentStep < totalSteps) {
+    document.querySelector(`.step[data-step="${currentStep}"]`).classList.remove('active');
+    currentStep++;
+    document.querySelector(`.step[data-step="${currentStep}"]`).classList.add('active');
+    updateProgress();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  } else {
+    generateContent();
+  }
+}
+
+function prevStep() {
+  if (currentStep > 1) {
+    document.querySelector(`.step[data-step="${currentStep}"]`).classList.remove('active');
+    currentStep--;
+    document.querySelector(`.step[data-step="${currentStep}"]`).classList.add('active');
+    updateProgress();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+}
+
+function buildIntake() {
+  const g = id => document.getElementById(id)?.value?.trim() || '';
+  const lines = [];
+  lines.push('ABOUT THE PERSON');
+  lines.push(`Full name: ${g('full-name')}`);
+  if (g('nickname')) lines.push(`Preferred name: ${g('nickname')}`);
+  if (g('age')) lines.push(`Age at passing: ${g('age')}`);
+  lines.push(`Date of passing: ${g('date-passing')}`);
+  lines.push(`City/state where they lived: ${g('city-lived')}`);
+  if (g('date-birth')) lines.push(`Date of birth: ${g('date-birth')}`);
+  if (g('city-birth')) lines.push(`City/state of birth: ${g('city-birth')}`);
+  if (g('parents')) lines.push(`Parents' names: ${g('parents')}`);
+  lines.push('');
+  lines.push('LIFE & WORK');
+  if (g('career')) lines.push(`Occupation or career: ${g('career')}`);
+  if (g('military')) lines.push(`Military service: ${g('military')}`);
+  if (g('education')) lines.push(`Education: ${g('education')}`);
+  if (g('faith')) lines.push(`Faith / religion: ${g('faith')}`);
+  if (g('personality')) lines.push(`Personality: ${g('personality')}`);
+  lines.push('');
+  lines.push('RELATIONSHIPS');
+  if (g('spouse')) lines.push(`Spouse / partner: ${g('spouse')}`);
+  if (g('children')) lines.push(`Children: ${g('children')}`);
+  if (g('grandchildren')) lines.push(`Grandchildren: ${g('grandchildren')}`);
+  if (g('siblings')) lines.push(`Siblings: ${g('siblings')}`);
+  if (g('other-survivors')) lines.push(`Other survivors: ${g('other-survivors')}`);
+  if (g('predeceased')) lines.push(`Predeceased by: ${g('predeceased')}`);
+  lines.push('');
+  lines.push('MEMORIES & DETAILS');
+  if (g('memories')) lines.push(g('memories'));
+  lines.push('');
+  lines.push('SERVICE DETAILS');
+  if (g('service-details')) lines.push(`Service: ${g('service-details')}`);
+  if (g('visitation')) lines.push(`Visitation: ${g('visitation')}`);
+  if (g('burial')) lines.push(`Burial/cremation: ${g('burial')}`);
+  if (g('flowers')) lines.push(`In lieu of flowers: ${g('flowers')}`);
+  if (g('poem')) lines.push(`Reading to include:\n${g('poem')}`);
+  lines.push('');
+  lines.push('ADDITIONAL REQUESTS');
+  if (g('avoid')) lines.push(`Avoid: ${g('avoid')}`);
+  return lines.join('\n');
+}
+
+// ── Backend connection ───────────────────────────────────────
+// Update this to your deployed backend URL before going live.
+// While testing locally, this should match the port your backend runs on.
+const BACKEND_URL = 'http://localhost:3000';
+
+async function callAPI(outputType, intake) {
+  const response = await fetch(`${BACKEND_URL}/api/generate/${outputType}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ intake, tone: selectedTone })
+  });
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData?.error || `Server error ${response.status}`);
+  }
+  const data = await response.json();
+  if (!data.text) throw new Error('No content returned');
+  return data.text;
+}
+
+async function generateContent() {
+  document.getElementById('form-card').style.display = 'none';
+  const resultsCard = document.getElementById('results-card');
+  resultsCard.classList.add('active');
+  document.getElementById('gen-status').classList.add('active');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+
+  const intake = buildIntake();
+
+  // Call 1: Memorial program
+  try {
+    setGenStep('program');
+    const programText = await callAPI('program', intake);
+    setResult('result-program', programText);
+    updateWordCount('program', 100, 150);
+    markGenDone('program');
+  } catch (err) {
+    setResult('result-program', 'Error generating memorial program. Please try again.');
+  }
+
+  // Call 2: Obituary
+  try {
+    setGenStep('obituary');
+    const obituaryText = await callAPI('obituary', intake);
+    setResult('result-obituary', obituaryText);
+    updateWordCount('obituary', 300, 400);
+    markGenDone('obituary');
+  } catch (err) {
+    setResult('result-obituary', 'Error generating obituary. Please try again.');
+  }
+
+  // Call 3: Eulogy
+  try {
+    setGenStep('eulogy');
+    const eulogyText = await callAPI('eulogy', intake);
+    setResult('result-eulogy', eulogyText);
+    updateWordCount('eulogy', 600, 800);
+    markGenDone('eulogy');
+  } catch (err) {
+    setResult('result-eulogy', 'Error generating eulogy. Please try again.');
+  }
+
+  document.getElementById('gen-status').classList.remove('active');
+}
+
+// ── Export & payment flow ────────────────────────────────────────
+// Persist edited content before redirecting to Stripe, since the
+// browser navigates away from this page entirely during checkout.
+function collectExportData() {
+  const getText = id => document.getElementById(id)?.innerText?.trim() || '';
+  return {
+    fullName: document.getElementById('full-name').value.trim(),
+    dateBirth: document.getElementById('date-birth').value.trim(),
+    datePassing: document.getElementById('date-passing').value.trim(),
+    program: getText('result-program'),
+    obituary: getText('result-obituary'),
+    eulogy: getText('result-eulogy'),
+    photoBase64: photoBase64
+  };
+}
+
+async function startExport() {
+  const exportData = collectExportData();
+  sessionStorage.setItem('obitExportData', JSON.stringify(exportData));
+  sessionStorage.setItem('obitExportFormat', document.getElementById('export-format').value);
+
+  const btn = document.getElementById('export-btn');
+  const statusText = document.getElementById('export-status-text');
+  btn.disabled = true;
+  statusText.textContent = 'Starting checkout...';
+
+  try {
+    const response = await fetch(`${BACKEND_URL}/api/payment/create-checkout-session`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ fullName: exportData.fullName })
+    });
+    if (!response.ok) throw new Error('Checkout failed to start');
+    const data = await response.json();
+    if (!data.url) throw new Error('No checkout URL returned');
+    window.location.href = data.url;
+  } catch (err) {
+    statusText.textContent = 'Could not start checkout. Please try again.';
+    btn.disabled = false;
+    console.error('Checkout error:', err.message);
+  }
+}
+
+async function completeExport() {
+  const stored = sessionStorage.getItem('obitExportData');
+  const format = sessionStorage.getItem('obitExportFormat') || 'pdf';
+  const statusText = document.getElementById('export-status-text');
+
+  if (!stored) {
+    statusText.textContent = 'Your session expired before export. Please regenerate and try again.';
+    return;
+  }
+
+  statusText.textContent = 'Payment confirmed — preparing your document...';
+
+  try {
+    const exportData = JSON.parse(stored);
+    exportData.format = format;
+
+    const response = await fetch(`${BACKEND_URL}/api/export`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(exportData)
+    });
+    if (!response.ok) throw new Error('Export failed');
+
+    const blob = await response.blob();
+    const safeName = (exportData.fullName || 'memorial').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${safeName}.${format === 'pdf' ? 'pdf' : 'docx'}`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    window.URL.revokeObjectURL(url);
+
+    sessionStorage.removeItem('obitExportData');
+    sessionStorage.removeItem('obitExportFormat');
+    statusText.textContent = 'Downloaded. Thank you.';
+  } catch (err) {
+    statusText.textContent = 'Export failed after payment. Please contact support — your payment was processed.';
+    console.error('Export error:', err.message);
+  }
+}
+
+async function checkPaymentReturn() {
+  const params = new URLSearchParams(window.location.search);
+  const sessionId = params.get('session_id');
+  const paid = params.get('paid');
+
+  if (paid === 'false') return;
+  if (!sessionId) return;
+
+  // Show the results screen with a status message while we verify
+  document.getElementById('form-card').style.display = 'none';
+  document.getElementById('results-card').classList.add('active');
+  document.getElementById('export-status-text').textContent = 'Verifying payment...';
+
+  try {
+    const response = await fetch(`${BACKEND_URL}/api/payment/verify/${sessionId}`);
+    const data = await response.json();
+    if (data.paid) {
+      await completeExport();
+    } else {
+      document.getElementById('export-status-text').textContent = 'Payment not confirmed. Please try exporting again.';
+    }
+  } catch (err) {
+    document.getElementById('export-status-text').textContent = 'Could not verify payment. If you were charged, please contact support.';
+  }
+}
+
+function fillTestData() {
+  const set = (id, val) => { const el = document.getElementById(id); if (el) el.value = val; };
+  set('full-name', 'Margaret Louise Hendry');
+  set('nickname', 'Maggie');
+  set('date-passing', 'November 14, 2024');
+  set('age', '78');
+  set('city-lived', 'Asheville, NC');
+  set('date-birth', 'March 3, 1946');
+  set('city-birth', 'Charleston, SC');
+  set('parents', 'Harold and Edna Whitmore');
+  set('career', 'School librarian, Buncombe County Elementary — 22 years');
+  set('faith', 'Presbyterian');
+  set('personality', 'Warm, patient, remembered every detail, made people feel seen');
+  set('spouse', 'James Hendry — 51 years');
+  set('children', 'David Hendry, Claire Ostrowski, Robert Hendry');
+  set('grandchildren', '7 grandchildren');
+  set('siblings', 'Ruth Whitmore-Bass');
+  set('other-survivors', 'Son-in-law Paul Ostrowski, daughter-in-law Anne Hendry');
+  set('predeceased', 'Her parents and her brother George');
+  set('memories', "She read aloud with such feeling that children and teachers would linger in the doorway to listen. She volunteered at the library every Thursday for 15 years after she retired. She remembered the names of everyone's pets, the book you mentioned two Christmases ago, the thing you said once and forgot you said.");
+  set('service-details', 'Saturday November 23, 2024 at 2:00 pm — First Presbyterian Church, Asheville NC');
+  set('visitation', 'Friday November 22, 5:00–8:00 pm, same location');
+  set('flowers', 'Buncombe County Public Library Foundation');
+  selectTone('celebratory');
+}
+
+updateProgress();
+checkPaymentReturn();
+</script>
+</body>
+</html>
