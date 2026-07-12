@@ -980,7 +980,7 @@ function buildIntake() {
 // ── Backend connection ───────────────────────────────────────
 // Update this to your deployed backend URL before going live.
 // While testing locally, this should match the port your backend runs on.
-const BACKEND_URL = 'obit-ai-backend-production.up.railway.app';
+const BACKEND_URL = 'http://localhost:3000';
 
 async function callAPI(outputType, intake) {
   const response = await fetch(`${BACKEND_URL}/api/generate/${outputType}`, {
@@ -996,6 +996,46 @@ async function callAPI(outputType, intake) {
   if (!data.text) throw new Error('No content returned');
   return data.text;
 }
+
+function setResult(id, text) {
+  const el = document.getElementById(id);
+  el.innerHTML = '';
+  (text || '').trim().split(/\n\n+/).forEach(para => {
+    if (para.trim()) {
+      const p = document.createElement('p');
+      p.textContent = para.trim();
+      el.appendChild(p);
+    }
+  });
+}
+
+function updateWordCount(id, min, max) {
+  const el = document.getElementById('result-' + id);
+  if (!el) return;
+  const text = el.innerText || '';
+  const count = text.trim().split(/\s+/).filter(w => w.length > 0).length;
+  const label = document.getElementById('wc-' + id);
+  if (!label) return;
+  label.textContent = count + ' words';
+  label.className = 'word-count-live';
+  if (count > max) label.classList.add('over');
+}
+
+function setGenStep(step) {
+  ['program', 'obituary', 'eulogy'].forEach(s => {
+    const el = document.getElementById('gstep-' + s);
+    if (!el) return;
+    el.className = 'generation-step';
+    if (s === step) el.classList.add('current');
+  });
+}
+
+function markGenDone(step) {
+  const el = document.getElementById('gstep-' + step);
+  if (el) el.classList.add('done');
+}
+
+function setActiveSection(name) {}
 
 async function generateContent() {
   document.getElementById('form-card').style.display = 'none';
