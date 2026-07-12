@@ -980,7 +980,7 @@ function buildIntake() {
 // ── Backend connection ───────────────────────────────────────
 // Update this to your deployed backend URL before going live.
 // While testing locally, this should match the port your backend runs on.
-const BACKEND_URL = 'const BACKEND_URL = 'https://obit-ai-backend-production.up.railway.app';';
+const BACKEND_URL = 'https://obit-ai-backend-production.up.railway.app';
 
 async function callAPI(outputType, intake) {
   const response = await fetch(`${BACKEND_URL}/api/generate/${outputType}`, {
